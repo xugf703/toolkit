@@ -39,7 +39,7 @@ ToolKit 是一款功能强大的 Chrome 扩展工具包，为开发者提供了�
 ### 本地开发安装
 1. 克隆本仓库：
    ```
-   git clone https://github.com/yourusername/toolkit.git
+   git clone https://github.com/xugf703/toolkit.git
    ```
 2. 打开 Chrome 浏览器，进入 chrome://extensions/
 3. 开启"开发者模式"
