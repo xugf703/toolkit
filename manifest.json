@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "ToolKit",
-  "version": "1.0.0",
-  "description": "A powerful HTTP client for Chrome, similar to Postman, with curl import/export capabilities",
+  "version": "1.1.0",
+  "description": "A comprehensive developer toolset for Chrome, featuring HTTP client with curl support, JSON beautifier/tree view, Base64/URL encoder/decoder, time converter with timezone support, and MD5 generator",
   "permissions": [
     "activeTab",
     "storage",
