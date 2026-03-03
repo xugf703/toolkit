@@ -949,6 +949,92 @@ body {
     background-color: #f5f5f5;
 }
 
+/* Favorites Styles */
+#favorites-list {
+    max-height: 400px;
+    overflow-y: auto;
+    margin-bottom: 20px;
+}
+
+.favorite-item {
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 15px;
+    margin-bottom: 10px;
+    transition: all 0.3s ease;
+}
+
+.favorite-item:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transform: translateY(-1px);
+}
+
+.favorite-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.favorite-method {
+    padding: 4px 8px;
+    background-color: #4CAF50;
+    color: white;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.favorite-name {
+    font-weight: 500;
+    color: #333;
+    font-size: 14px;
+}
+
+.favorite-url {
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 10px;
+    word-break: break-all;
+}
+
+.favorite-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.favorite-actions button {
+    padding: 6px 12px;
+    border: 1px solid #ddd;
+    background-color: white;
+    color: #333;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.3s ease;
+}
+
+.favorite-actions .load-request {
+    background-color: #4CAF50;
+    color: white;
+    border-color: #4CAF50;
+}
+
+.favorite-actions .load-request:hover {
+    background-color: #45a049;
+}
+
+.favorite-actions .delete-request {
+    background-color: #f44336;
+    color: white;
+    border-color: #f44336;
+}
+
+.favorite-actions .delete-request:hover {
+    background-color: #d32f2f;
+}
+
 /* Responsive Adjustments */
 @media (max-width: 768px) {
     .reqsmith-container {

@@ -32,6 +32,8 @@
                     <div class="header-buttons">
                         <button id="import-curl">Import cURL</button>
                         <button id="export-curl">Export cURL</button>
+                        <button id="save-request">Save Request</button>
+                        <button id="show-favorites">Favorites</button>
                     </div>
                     
                     <!-- Request Configuration -->
@@ -325,6 +327,18 @@
             <div class="modal-buttons">
                 <button id="cancel-import">Cancel</button>
                 <button id="confirm-import">Import</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Favorites Modal -->
+    <div id="favorites-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>Favorites</h2>
+            <div id="favorites-list"></div>
+            <div class="modal-buttons">
+                <button id="close-favorites">Close</button>
             </div>
         </div>
     </div>

@@ -19,6 +19,11 @@ const elements = {
     curlInput: document.getElementById('curl-input'),
     cancelImport: document.getElementById('cancel-import'),
     confirmImport: document.getElementById('confirm-import'),
+    saveRequest: document.getElementById('save-request'),
+    showFavorites: document.getElementById('show-favorites'),
+    favoritesModal: document.getElementById('favorites-modal'),
+    favoritesList: document.getElementById('favorites-list'),
+    closeFavorites: document.getElementById('close-favorites'),
     tabButtons: document.querySelectorAll('.tab-button'),
     tabContents: document.querySelectorAll('.tab-content'),
     beautifyRequest: document.getElementById('beautify-request'),
@@ -128,6 +133,22 @@ function setupEventListeners() {
     
     // Export cURL
     elements.exportCurl.addEventListener('click', exportCurl);
+    
+    // Save request
+    elements.saveRequest.addEventListener('click', saveRequest);
+    
+    // Show favorites
+    elements.showFavorites.addEventListener('click', showFavorites);
+    
+    // Close favorites modal
+    elements.closeFavorites.addEventListener('click', () => elements.favoritesModal.style.display = 'none');
+    
+    // Close modal when clicking outside
+    window.addEventListener('click', (e) => {
+        if (e.target === elements.favoritesModal) {
+            elements.favoritesModal.style.display = 'none';
+        }
+    });
     
     // Beautify JSON
     elements.beautifyRequest.addEventListener('click', () => beautifyJSON(elements.requestBody));
@@ -1107,6 +1128,158 @@ function updateTreeFromOutput() {
     } catch (error) {
         console.error('Error updating tree view:', error);
     }
+}
+
+// Save request to favorites
+function saveRequest() {
+    const url = elements.url.value;
+    if (!url) {
+        alert('Please enter a URL');
+        return;
+    }
+    
+    // Get request details
+    const request = {
+        id: Date.now().toString(),
+        name: prompt('Enter a name for this request:'),
+        method: elements.httpMethod.value,
+        url: url,
+        headers: {},
+        params: {},
+        body: elements.requestBody.value,
+        bodyType: elements.bodyType.value
+    };
+    
+    if (!request.name) return; // User canceled
+    
+    // Get headers
+    const headerItems = elements.headersList.querySelectorAll('.header-item');
+    headerItems.forEach(item => {
+        const name = item.querySelector('.header-name').value;
+        const value = item.querySelector('.header-value').value;
+        if (name && value) {
+            request.headers[name] = value;
+        }
+    });
+    
+    // Get params
+    const paramItems = elements.paramsList.querySelectorAll('.param-item');
+    paramItems.forEach(item => {
+        const name = item.querySelector('.param-name').value;
+        const value = item.querySelector('.param-value').value;
+        if (name) {
+            request.params[name] = value;
+        }
+    });
+    
+    // Get favorites from localStorage
+    let favorites = JSON.parse(localStorage.getItem('httpClientFavorites') || '[]');
+    
+    // Add new request to favorites
+    favorites.push(request);
+    
+    // Save back to localStorage
+    localStorage.setItem('httpClientFavorites', JSON.stringify(favorites));
+    
+    alert('Request saved to favorites!');
+}
+
+// Show favorites
+function showFavorites() {
+    // Get favorites from localStorage
+    const favorites = JSON.parse(localStorage.getItem('httpClientFavorites') || '[]');
+    
+    // Clear favorites list
+    elements.favoritesList.innerHTML = '';
+    
+    if (favorites.length === 0) {
+        elements.favoritesList.innerHTML = '<p>No saved requests yet.</p>';
+    } else {
+        favorites.forEach(request => {
+            const requestItem = document.createElement('div');
+            requestItem.className = 'favorite-item';
+            requestItem.innerHTML = `
+                <div class="favorite-item-header">
+                    <span class="favorite-method">${request.method}</span>
+                    <span class="favorite-name">${request.name}</span>
+                </div>
+                <div class="favorite-url">${request.url}</div>
+                <div class="favorite-actions">
+                    <button class="load-request" data-id="${request.id}">Load</button>
+                    <button class="delete-request" data-id="${request.id}">Delete</button>
+                </div>
+            `;
+            elements.favoritesList.appendChild(requestItem);
+        });
+        
+        // Add event listeners for load and delete buttons
+        document.querySelectorAll('.load-request').forEach(button => {
+            button.addEventListener('click', () => loadRequest(button.dataset.id));
+        });
+        
+        document.querySelectorAll('.delete-request').forEach(button => {
+            button.addEventListener('click', () => deleteRequest(button.dataset.id));
+        });
+    }
+    
+    // Show modal
+    elements.favoritesModal.style.display = 'block';
+}
+
+// Load saved request
+function loadRequest(requestId) {
+    // Get favorites from localStorage
+    const favorites = JSON.parse(localStorage.getItem('httpClientFavorites') || '[]');
+    
+    // Find the request
+    const request = favorites.find(r => r.id === requestId);
+    if (!request) return;
+    
+    // Update form fields
+    elements.httpMethod.value = request.method;
+    elements.url.value = request.url;
+    elements.requestBody.value = request.body || '';
+    elements.bodyType.value = request.bodyType || 'json';
+    
+    // Clear existing headers
+    elements.headersList.innerHTML = '';
+    
+    // Add saved headers
+    for (const [name, value] of Object.entries(request.headers)) {
+        const headerItem = createHeaderItem();
+        headerItem.querySelector('.header-name').value = name;
+        headerItem.querySelector('.header-value').value = value;
+        elements.headersList.appendChild(headerItem);
+    }
+    
+    // Clear existing params
+    elements.paramsList.innerHTML = '';
+    
+    // Add saved params
+    for (const [name, value] of Object.entries(request.params)) {
+        const paramItem = createParamItem(name, value);
+        elements.paramsList.appendChild(paramItem);
+    }
+    
+    // Close modal
+    elements.favoritesModal.style.display = 'none';
+}
+
+// Delete saved request
+function deleteRequest(requestId) {
+    if (!confirm('Are you sure you want to delete this request?')) return;
+    
+    // Get favorites from localStorage
+    let favorites = JSON.parse(localStorage.getItem('httpClientFavorites') || '[]');
+    
+    // Filter out the request
+    favorites = favorites.filter(r => r.id !== requestId);
+    
+    // Save back to localStorage
+    localStorage.setItem('httpClientFavorites', JSON.stringify(favorites));
+    
+    // Refresh favorites list
+    showFavorites();
 }
 
 // Switch between tool menus
