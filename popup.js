@@ -468,12 +468,19 @@ async function sendHttpRequest() {
     
     const startTime = performance.now();
     
+    // Create AbortController for timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    
     try {
         const response = await fetch(url, {
             method,
             headers,
-            body: body ? (typeof body === 'object' && !(body instanceof URLSearchParams) ? JSON.stringify(body) : body) : undefined
+            body: body ? (typeof body === 'object' && !(body instanceof URLSearchParams) ? JSON.stringify(body) : body) : undefined,
+            signal: controller.signal
         });
+        
+        clearTimeout(timeoutId);
         
         const endTime = performance.now();
         const responseTime = (endTime - startTime).toFixed(2);
@@ -496,13 +503,19 @@ async function sendHttpRequest() {
             : responseData;
         
     } catch (error) {
+        clearTimeout(timeoutId);
         const endTime = performance.now();
         const responseTime = (endTime - startTime).toFixed(2);
         
         elements.responseStatus.textContent = 'Error';
         elements.responseStatus.className = 'error';
         elements.responseTime.textContent = `${responseTime}ms`;
-        elements.responseBody.textContent = `Error: ${error.message}`;
+        
+        if (error.name === 'AbortError') {
+            elements.responseBody.textContent = 'Error: Request timeout (5 seconds)';
+        } else {
+            elements.responseBody.textContent = `Error: ${error.message}`;
+        }
     } finally {
         // Reset loading state
         elements.sendRequest.textContent = 'Send Request';
