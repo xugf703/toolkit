@@ -143,6 +143,8 @@ function setupEventListeners() {
     // Close favorites modal
     elements.closeFavorites.addEventListener('click', () => elements.favoritesModal.style.display = 'none');
     
+    document.querySelector('#favorites-modal .close-modal').addEventListener('click', () => elements.favoritesModal.style.display = 'none');
+    
     // Close modal when clicking outside
     window.addEventListener('click', (e) => {
         if (e.target === elements.favoritesModal) {
@@ -473,6 +475,7 @@ async function sendHttpRequest() {
     const timeoutId = setTimeout(() => controller.abort(), 5000);
     
     try {
+        console.log(headers)
         const response = await fetch(url, {
             method,
             headers,
