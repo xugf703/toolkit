@@ -1163,10 +1163,17 @@ function saveRequest() {
         headers: {},
         params: {},
         body: elements.requestBody.value,
-        bodyType: elements.bodyType.value
+        bodyType: elements.bodyType.value,
+        tags: []
     };
     
     if (!request.name) return; // User canceled
+    
+    // Get tags
+    const tagsInput = prompt('Enter tags (comma separated):');
+    if (tagsInput) {
+        request.tags = tagsInput.split(',').map(tag => tag.trim()).filter(tag => tag);
+    }
     
     // Get headers
     const headerItems = elements.headersList.querySelectorAll('.header-item');
@@ -1211,30 +1218,80 @@ function showFavorites() {
     if (favorites.length === 0) {
         elements.favoritesList.innerHTML = '<p>No saved requests yet.</p>';
     } else {
+        // Get all unique tags
+        const allTags = new Set();
         favorites.forEach(request => {
-            const requestItem = document.createElement('div');
-            requestItem.className = 'favorite-item';
-            requestItem.innerHTML = `
-                <div class="favorite-item-header">
-                    <span class="favorite-method">${request.method}</span>
-                    <span class="favorite-name">${request.name}</span>
-                </div>
-                <div class="favorite-url">${request.url}</div>
-                <div class="favorite-actions">
-                    <button class="load-request" data-id="${request.id}">Load</button>
-                    <button class="delete-request" data-id="${request.id}">Delete</button>
-                </div>
-            `;
-            elements.favoritesList.appendChild(requestItem);
+            if (request.tags) {
+                request.tags.forEach(tag => allTags.add(tag));
+            }
         });
         
-        // Add event listeners for load and delete buttons
-        document.querySelectorAll('.load-request').forEach(button => {
-            button.addEventListener('click', () => loadRequest(button.dataset.id));
-        });
+        // Add tag filter
+        const filterContainer = document.createElement('div');
+        filterContainer.className = 'favorites-filter';
+        filterContainer.innerHTML = `
+            <label for="tag-filter">Filter by tag:</label>
+            <select id="tag-filter">
+                <option value="all">All Tags</option>
+                ${Array.from(allTags).map(tag => `<option value="${tag}">${tag}</option>`).join('')}
+            </select>
+        `;
+        elements.favoritesList.appendChild(filterContainer);
         
-        document.querySelectorAll('.delete-request').forEach(button => {
-            button.addEventListener('click', () => deleteRequest(button.dataset.id));
+        // Add table header
+        const tableHeader = document.createElement('div');
+        tableHeader.className = 'favorite-table-header';
+        tableHeader.innerHTML = `
+            <div class="header-title">Title</div>
+            <div class="header-tags">Tags</div>
+            <div class="header-actions">Actions</div>
+        `;
+        elements.favoritesList.appendChild(tableHeader);
+        
+        // Create favorites container
+        const favoritesContainer = document.createElement('div');
+        favoritesContainer.className = 'favorites-container';
+        
+        // Add favorites container to DOM first
+        elements.favoritesList.appendChild(favoritesContainer);
+        
+        // Function to render favorites based on selected tag
+        function renderFavorites(filterTag) {
+            favoritesContainer.innerHTML = '';
+            
+            favorites.forEach(request => {
+                // Check if request matches filter
+                if (filterTag === 'all' || (!filterTag) || (request.tags && request.tags.includes(filterTag))) {
+                    const requestItem = document.createElement('div');
+                    requestItem.className = 'favorite-item';
+                    requestItem.innerHTML = `
+                        <div class="favorite-name">${request.name}</div>
+                        <div class="favorite-tags">${request.tags && request.tags.length > 0 ? request.tags.map(tag => `<span class="tag">${tag}</span>`).join(' ') : '-'}</div>
+                        <div class="favorite-actions">
+                            <button class="load-request" data-id="${request.id}">Load</button>
+                            <button class="delete-request" data-id="${request.id}">Delete</button>
+                        </div>
+                    `;
+                    favoritesContainer.appendChild(requestItem);
+                }
+            });
+            
+            // Add event listeners for load and delete buttons
+            favoritesContainer.querySelectorAll('.load-request').forEach(button => {
+                button.addEventListener('click', () => loadRequest(button.dataset.id));
+            });
+            
+            favoritesContainer.querySelectorAll('.delete-request').forEach(button => {
+                button.addEventListener('click', () => deleteRequest(button.dataset.id));
+            });
+        }
+        
+        // Initial render
+        renderFavorites('all');
+        
+        // Add filter event listener
+        document.getElementById('tag-filter').addEventListener('change', function() {
+            renderFavorites(this.value);
         });
     }
     

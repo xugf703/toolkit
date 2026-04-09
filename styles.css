@@ -956,52 +956,103 @@ body {
     margin-bottom: 20px;
 }
 
-.favorite-item {
-    background-color: #f9f9f9;
+.favorites-filter {
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.favorites-filter label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #333;
+}
+
+.favorites-filter select {
+    padding: 6px 10px;
     border: 1px solid #ddd;
     border-radius: 4px;
+    font-size: 14px;
+    background-color: white;
+}
+
+.favorite-table-header {
+    display: flex;
+    background-color: #f5f5f5;
+    border: 1px solid #ddd;
+    border-radius: 4px 4px 0 0;
+    padding: 10px 15px;
+    font-weight: 500;
+    font-size: 14px;
+    color: #333;
+}
+
+.favorite-table-header .header-title {
+    flex: 2;
+}
+
+.favorite-table-header .header-tags {
+    flex: 2;
+}
+
+.favorite-table-header .header-actions {
+    flex: 1;
+    text-align: right;
+}
+
+.favorites-container {
+    border: 1px solid #ddd;
+    border-top: none;
+    border-radius: 0 0 4px 4px;
+    overflow: hidden;
+}
+
+.favorite-item {
+    display: flex;
+    align-items: center;
+    background-color: #f9f9f9;
+    border-bottom: 1px solid #ddd;
     padding: 15px;
-    margin-bottom: 10px;
     transition: all 0.3s ease;
 }
 
+.favorite-item:last-child {
+    border-bottom: none;
+}
+
 .favorite-item:hover {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    transform: translateY(-1px);
+    background-color: #f5f5f5;
 }
 
-.favorite-item-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 8px;
-}
-
-.favorite-method {
-    padding: 4px 8px;
-    background-color: #4CAF50;
-    color: white;
-    border-radius: 4px;
-    font-size: 12px;
-    font-weight: 500;
-}
-
-.favorite-name {
+.favorite-item .favorite-name {
+    flex: 2;
     font-weight: 500;
     color: #333;
     font-size: 14px;
 }
 
-.favorite-url {
+.favorite-item .favorite-tags {
+    flex: 2;
     font-size: 13px;
-    color: #666;
-    margin-bottom: 10px;
-    word-break: break-all;
 }
 
-.favorite-actions {
+.favorite-item .favorite-tags .tag {
+    display: inline-block;
+    padding: 2px 8px;
+    background-color: #e3f2fd;
+    color: #1976d2;
+    border-radius: 12px;
+    font-size: 12px;
+    margin-right: 5px;
+    margin-bottom: 5px;
+}
+
+.favorite-item .favorite-actions {
+    flex: 1;
     display: flex;
     gap: 10px;
+    justify-content: flex-end;
 }
 
 .favorite-actions button {
