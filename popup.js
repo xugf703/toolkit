@@ -1113,16 +1113,13 @@ function updateNodeValue(newValue, path) {
 // Copy JSON Output function
 function copyJsonOutput() {
     try {
-        let output;
-        if (elements.jsonTree.style.display === 'block') {
-            output = elements.jsonInput.value;
-        } else {
-            output = elements.jsonOutput.value;
-        }
-        if (!output) {
+        const input = elements.jsonInput.value.trim();
+        if (!input) {
             return;
         }
-        navigator.clipboard.writeText(output).then(() => {
+        const parsed = JSON.parse(input);
+        const beautified = JSON.stringify(parsed, null, 2);
+        navigator.clipboard.writeText(beautified).then(() => {
             console.log('Copied to clipboard!');
         }).catch(err => {
             console.error('Error copying to clipboard:', err);
@@ -1269,6 +1266,7 @@ function showFavorites() {
                         <div class="favorite-tags">${request.tags && request.tags.length > 0 ? request.tags.map(tag => `<span class="tag">${tag}</span>`).join(' ') : '-'}</div>
                         <div class="favorite-actions">
                             <button class="load-request" data-id="${request.id}">Load</button>
+                            <button class="edit-request" data-id="${request.id}">Edit</button>
                             <button class="delete-request" data-id="${request.id}">Delete</button>
                         </div>
                     `;
@@ -1281,6 +1279,10 @@ function showFavorites() {
                 button.addEventListener('click', () => loadRequest(button.dataset.id));
             });
             
+            favoritesContainer.querySelectorAll('.edit-request').forEach(button => {
+                button.addEventListener('click', () => editRequestTags(button.dataset.id));
+            });
+
             favoritesContainer.querySelectorAll('.delete-request').forEach(button => {
                 button.addEventListener('click', () => deleteRequest(button.dataset.id));
             });
@@ -1352,6 +1354,23 @@ function deleteRequest(requestId) {
     localStorage.setItem('httpClientFavorites', JSON.stringify(favorites));
     
     // Refresh favorites list
+    showFavorites();
+}
+
+// Edit tags of a saved request
+function editRequestTags(requestId) {
+    let favorites = JSON.parse(localStorage.getItem('httpClientFavorites') || '[]');
+    const request = favorites.find(r => r.id === requestId);
+    if (!request) return;
+
+    const currentTags = request.tags ? request.tags.join(', ') : '';
+    const newTagsInput = prompt('Edit tags (comma separated):', currentTags);
+    if (newTagsInput === null) return;
+
+    request.tags = newTagsInput.split(',').map(tag => tag.trim()).filter(tag => tag);
+
+    localStorage.setItem('httpClientFavorites', JSON.stringify(favorites));
+
     showFavorites();
 }
 

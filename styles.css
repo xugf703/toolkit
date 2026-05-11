@@ -151,6 +151,7 @@ body {
 .json-tree {
     width: 100%;
     min-height: 150px;
+    max-height: 400px;
     padding: 10px;
     border: 1px solid #ddd;
     border-radius: 4px;
@@ -1074,6 +1075,16 @@ body {
 
 .favorite-actions .load-request:hover {
     background-color: #45a049;
+}
+
+.favorite-actions .edit-request {
+    background-color: #2196F3;
+    color: white;
+    border-color: #2196F3;
+}
+
+.favorite-actions .edit-request:hover {
+    background-color: #1976D2;
 }
 
 .favorite-actions .delete-request {
