@@ -1404,3 +1404,50 @@ body {
         flex-direction: column;
     }
 }
+
+/* Unicode Tool */
+.unicode-tool {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+#unicode-input,
+#unicode-output {
+    width: 100%;
+    min-height: 150px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 14px;
+    resize: vertical;
+}
+
+#unicode-output {
+    background-color: #f9f9f9;
+}
+
+.unicode-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+#encode-unicode,
+#decode-unicode,
+#copy-unicode {
+    flex: 1;
+    padding: 8px 12px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+#encode-unicode:hover,
+#decode-unicode:hover,
+#copy-unicode:hover {
+    background-color: #45a049;
+}

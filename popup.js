@@ -53,22 +53,22 @@ const elements = {
     decodeUrl: document.getElementById('decode-url'),
     copyUrl: document.getElementById('copy-url'),
     // Time Tool elements
-        currentTime: document.getElementById('current-time'),
-        unixTimestamp: document.getElementById('unix-timestamp'),
-        timestampUnit: document.getElementById('timestamp-unit'),
-        dateTime: document.getElementById('date-time'),
-        convertToDate: document.getElementById('convert-to-date'),
-        convertToTimestamp: document.getElementById('convert-to-timestamp'),
-        convertCurrentToTimestamp: document.getElementById('convert-current-to-timestamp'),
-        refreshCurrentTime: document.getElementById('refresh-current-time'),
-        copyTimeResult: document.getElementById('copy-time-result'),
-        timeResult: document.getElementById('time-result'),
-        // Time Zone Conversion elements
-        sourceTimezone: document.getElementById('source-timezone'),
-        sourceTime: document.getElementById('source-time'),
-        targetTimezone: document.getElementById('target-timezone'),
-        targetTime: document.getElementById('target-time'),
-        convertTimezone: document.getElementById('convert-timezone'),
+    currentTime: document.getElementById('current-time'),
+    unixTimestamp: document.getElementById('unix-timestamp'),
+    timestampUnit: document.getElementById('timestamp-unit'),
+    dateTime: document.getElementById('date-time'),
+    convertToDate: document.getElementById('convert-to-date'),
+    convertToTimestamp: document.getElementById('convert-to-timestamp'),
+    convertCurrentToTimestamp: document.getElementById('convert-current-to-timestamp'),
+    refreshCurrentTime: document.getElementById('refresh-current-time'),
+    copyTimeResult: document.getElementById('copy-time-result'),
+    timeResult: document.getElementById('time-result'),
+    // Time Zone Conversion elements
+    sourceTimezone: document.getElementById('source-timezone'),
+    sourceTime: document.getElementById('source-time'),
+    targetTimezone: document.getElementById('target-timezone'),
+    targetTime: document.getElementById('target-time'),
+    convertTimezone: document.getElementById('convert-timezone'),
     // MD5 Tools
     md5Input: document.getElementById('md5-input'),
     md5Output: document.getElementById('md5-output'),
@@ -83,7 +83,13 @@ const elements = {
     compareDiff: document.getElementById('compare-diff'),
     clearDiff: document.getElementById('clear-diff'),
     moveLeft: document.getElementById('move-left'),
-    moveRight: document.getElementById('move-right')
+    moveRight: document.getElementById('move-right'),
+    // Unicode Tools
+    unicodeInput: document.getElementById('unicode-input'),
+    unicodeOutput: document.getElementById('unicode-output'),
+    encodeUnicode: document.getElementById('encode-unicode'),
+    decodeUnicode: document.getElementById('decode-unicode'),
+    copyUnicode: document.getElementById('copy-unicode')
 };
 
 // Initialize the extension
@@ -198,6 +204,12 @@ function setupEventListeners() {
     // Diff Tools
     elements.compareDiff.addEventListener('click', compareTextDiff);
     elements.clearDiff.addEventListener('click', clearTextDiff);
+    
+    // Unicode Tools
+    elements.encodeUnicode.addEventListener('click', encodeUnicode);
+    elements.decodeUnicode.addEventListener('click', decodeUnicode);
+    elements.copyUnicode.addEventListener('click', copyUnicodeOutput);
+    
     // Rebind move buttons with direct DOM references
     document.getElementById('move-left').addEventListener('click', function() {
         const rightTextarea = document.getElementById('diff-right');
@@ -2150,6 +2162,86 @@ function syncScroll(e) {
         elements.diffLeftLines.scrollTop = element.scrollTop;
     } else if (element === elements.diffRight) {
         elements.diffRightLines.scrollTop = element.scrollTop;
+    }
+}
+
+// ==================== Unicode Tools Functions ====================
+
+// Encode to Unicode escape sequences
+function encodeUnicode() {
+    try {
+        const input = elements.unicodeInput.value;
+        if (!input) return;
+        
+        let result = '';
+        for (let i = 0; i < input.length; i++) {
+            const code = input.charCodeAt(i);
+            // Handle supplementary characters (surrogate pairs)
+            if (code >= 0xD800 && code <= 0xDBFF && i + 1 < input.length) {
+                const nextCode = input.charCodeAt(i + 1);
+                if (nextCode >= 0xDC00 && nextCode <= 0xDFFF) {
+                    const codePoint = ((code - 0xD800) << 10) + (nextCode - 0xDC00) + 0x10000;
+                    result += '\\u{' + codePoint.toString(16).toUpperCase() + '}';
+                    i++; // skip next character
+                    continue;
+                }
+            }
+            // ASCII printable characters (except backslash) output as-is
+            if (code >= 0x20 && code <= 0x7E && code !== 0x5C) {
+                result += input[i];
+            } else if (code < 0x10) {
+                // Handle control characters
+                result += '\\u000' + code.toString(16).toUpperCase();
+            } else {
+                result += '\\u' + code.toString(16).toUpperCase().padStart(4, '0');
+            }
+        }
+        elements.unicodeOutput.value = result;
+    } catch (error) {
+        console.error('Error encoding Unicode:', error);
+    }
+}
+
+// Decode Unicode escape sequences
+function decodeUnicode() {
+    try {
+        const input = elements.unicodeInput.value;
+        if (!input) return;
+        
+        // Handle \uXXXX format
+        let result = input.replace(/\\u([0-9a-fA-F]{4})/g, (match, hex) => {
+            return String.fromCharCode(parseInt(hex, 16));
+        });
+        
+        // Handle \u{XXXXX} format (ES6 extended Unicode)
+        result = result.replace(/\\u\{([0-9a-fA-F]+)\}/g, (match, hex) => {
+            const codePoint = parseInt(hex, 16);
+            if (codePoint > 0xFFFF) {
+                const high = Math.floor((codePoint - 0x10000) / 0x400) + 0xD800;
+                const low = ((codePoint - 0x10000) % 0x400) + 0xDC00;
+                return String.fromCharCode(high, low);
+            }
+            return String.fromCharCode(codePoint);
+        });
+        
+        elements.unicodeOutput.value = result;
+    } catch (error) {
+        console.error('Error decoding Unicode:', error);
+    }
+}
+
+// Copy Unicode output
+function copyUnicodeOutput() {
+    try {
+        const output = elements.unicodeOutput.value;
+        if (!output) return;
+        navigator.clipboard.writeText(output).then(() => {
+            console.log('Unicode result copied to clipboard!');
+        }).catch(err => {
+            console.error('Error copying to clipboard:', err);
+        });
+    } catch (error) {
+        console.error('Error copying Unicode output:', error);
     }
 }
 

@@ -22,6 +22,7 @@
                 <button class="menu-button" data-menu="time">Time</button>
                 <button class="menu-button" data-menu="md5">MD5</button>
                 <button class="menu-button" data-menu="diff">Diff</button>
+                <button class="menu-button" data-menu="unicode">Unicode</button>
             </div>
         
         <!-- Menu Contents -->
@@ -313,6 +314,19 @@
                         <h4>Diff Information</h4>
                         <div id="diff-details">Select a line to see differences</div>
                     </div>
+                </div>
+            </div>
+            
+            <!-- Unicode Tools -->
+            <div class="menu-content" id="unicode-content">
+                <div class="unicode-tool">
+                    <textarea id="unicode-input" placeholder="Enter text or Unicode escape sequences (e.g., \u4e2d\u6587)..."></textarea>
+                    <div class="unicode-buttons">
+                        <button id="decode-unicode">Decode Unicode</button>
+                        <button id="encode-unicode">Encode to Unicode</button>
+                        <button id="copy-unicode">Copy</button>
+                    </div>
+                    <textarea id="unicode-output" placeholder="Result will appear here..." readonly></textarea>
                 </div>
             </div>
         </div>
