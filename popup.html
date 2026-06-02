@@ -119,16 +119,19 @@
             <!-- JSON Tools -->
             <div class="menu-content" id="json-content">
                 <div class="json-tool">
-                    <textarea id="json-input" placeholder="Enter JSON here..."></textarea>
+                    <textarea id="json-input" placeholder="Enter JSON or Java DTO class here..."></textarea>
                     <div class="json-buttons">
                         <button id="beautify-json">Beautify</button>
                         <button id="minify-json">Minify</button>
                         <button id="copy-json">Copy</button>
+                        <button id="json-to-java">JSON → Java DTO</button>
+                        <button id="java-to-json">Java DTO → JSON</button>
                     </div>
                     <div class="json-output-container">
                         <textarea id="json-output" placeholder="Result will appear here..." style="display: none;"></textarea>
                         <div id="json-tree" class="json-tree" style="display: none;"></div>
                     </div>
+                    <textarea id="java-output" placeholder="Java DTO code will appear here..." style="display: none;" readonly></textarea>
                 </div>
             </div>
             

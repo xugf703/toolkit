@@ -40,6 +40,9 @@ const elements = {
     beautifyJson: document.getElementById('beautify-json'),
     minifyJson: document.getElementById('minify-json'),
     copyJson: document.getElementById('copy-json'),
+    jsonToJava: document.getElementById('json-to-java'),
+    javaToJson: document.getElementById('java-to-json'),
+    javaOutput: document.getElementById('java-output'),
     // Base64 Tools
     base64Input: document.getElementById('base64-input'),
     base64Output: document.getElementById('base64-output'),
@@ -176,6 +179,8 @@ function setupEventListeners() {
     elements.minifyJson.addEventListener('click', minifyJsonTool);
     elements.copyJson.addEventListener('click', copyJsonOutput);
     elements.jsonOutput.addEventListener('input', updateTreeFromOutput);
+    elements.jsonToJava.addEventListener('click', jsonToJavaDto);
+    elements.javaToJson.addEventListener('click', javaDtoToJson);
     
     // Base64 Tools
     elements.encodeBase64.addEventListener('click', encodeBase64);
@@ -500,9 +505,20 @@ async function sendHttpRequest() {
         const endTime = performance.now();
         const responseTime = (endTime - startTime).toFixed(2);
         
+        const contentType = response.headers.get('content-type') || '';
+        const contentDisposition = response.headers.get('content-disposition') || '';
+        
+        if (isDownloadableResponse(contentType, contentDisposition, url)) {
+            await downloadResponse(response, url, contentDisposition);
+            elements.responseStatus.textContent = `${response.status} ${response.statusText}`;
+            elements.responseStatus.className = response.ok ? 'success' : 'error';
+            elements.responseTime.textContent = `${responseTime}ms`;
+            elements.responseBody.textContent = 'File downloaded successfully.';
+            return;
+        }
+        
         // Get response data
         let responseData;
-        const contentType = response.headers.get('content-type');
         if (contentType && contentType.includes('application/json')) {
             responseData = await response.json();
         } else {
@@ -535,6 +551,86 @@ async function sendHttpRequest() {
         // Reset loading state
         elements.sendRequest.textContent = 'Send Request';
         elements.sendRequest.classList.remove('loading');
+    }
+}
+
+function isDownloadableResponse(contentType, contentDisposition, url) {
+    const downloadableTypes = [
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+        'application/msword',
+        'application/vnd.ms-excel',
+        'application/vnd.ms-powerpoint',
+        'text/csv',
+        'application/pdf',
+        'application/zip',
+        'application/octet-stream',
+        'application/x-msdownload',
+        'application/x-tar',
+        'application/gzip',
+        'image/png',
+        'image/jpeg',
+        'image/gif',
+        'image/svg+xml',
+        'image/webp',
+        'audio/mpeg',
+        'audio/wav',
+        'video/mp4'
+    ];
+
+    if (downloadableTypes.some(t => contentType.toLowerCase().includes(t))) {
+        return true;
+    }
+
+    if (contentDisposition.includes('attachment')) {
+        return true;
+    }
+
+    const urlLower = url.toLowerCase();
+    const downloadableExtensions = [
+        '.doc', '.docx', '.xls', '.xlsx', '.csv', '.ppt', '.pptx',
+        '.pdf', '.zip', '.tar', '.gz', '.rar', '.7z',
+        '.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp', '.ico', '.bmp',
+        '.mp3', '.wav', '.ogg', '.flac',
+        '.mp4', '.avi', '.mov', '.wmv',
+        '.exe', '.msi', '.dmg'
+    ];
+    return downloadableExtensions.some(ext => urlLower.endsWith(ext));
+}
+
+async function downloadResponse(response, url, contentDisposition) {
+    const blob = await response.blob();
+
+    let filename = 'download';
+    const dispositionMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+    if (dispositionMatch) {
+        filename = dispositionMatch[1].replace(/['"]/g, '');
+    } else {
+        const urlPath = new URL(url).pathname;
+        const segments = urlPath.split('/').filter(s => s);
+        if (segments.length > 0) {
+            filename = decodeURIComponent(segments[segments.length - 1]);
+        }
+    }
+
+    const downloadUrl = URL.createObjectURL(blob);
+    if (typeof chrome !== 'undefined' && chrome.downloads) {
+        chrome.downloads.download({
+            url: downloadUrl,
+            filename: filename,
+            saveAs: false
+        }, () => {
+            URL.revokeObjectURL(downloadUrl);
+        });
+    } else {
+        const a = document.createElement('a');
+        a.href = downloadUrl;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(downloadUrl);
     }
 }
 
@@ -751,6 +847,7 @@ function beautifyJsonTool() {
         updateTreeView(parsed);
         elements.jsonOutput.style.display = 'none';
         elements.jsonTree.style.display = 'block';
+        elements.javaOutput.style.display = 'none';
     } catch (error) {
         console.error('Error beautifying JSON:', error);
     }
@@ -769,6 +866,7 @@ function minifyJsonTool() {
         updateTreeView(parsed);
         elements.jsonOutput.style.display = 'block';
         elements.jsonTree.style.display = 'none';
+        elements.javaOutput.style.display = 'none';
     } catch (error) {
         console.error('Error minifying JSON:', error);
     }
@@ -1153,6 +1251,224 @@ function updateTreeFromOutput() {
     } catch (error) {
         console.error('Error updating tree view:', error);
     }
+}
+
+// ==================== JSON ↔ Java DTO Functions ====================
+
+function jsonToJavaDto() {
+    try {
+        const input = elements.jsonInput.value.trim();
+        if (!input) return;
+
+        const parsed = JSON.parse(input);
+        const className = prompt('Enter Java class name:', 'MyDto');
+        if (!className) return;
+
+        const code = generateJavaDto(parsed, className);
+        elements.javaOutput.value = code;
+        elements.javaOutput.style.display = 'block';
+        elements.jsonOutput.style.display = 'none';
+        elements.jsonTree.style.display = 'none';
+    } catch (error) {
+        alert('Invalid JSON: ' + error.message);
+    }
+}
+
+function javaDtoToJson() {
+    try {
+        const input = elements.jsonInput.value.trim();
+        if (!input) return;
+
+        const parsed = parseJavaDto(input);
+        const json = generateSampleJson(parsed);
+
+        const jsonStr = JSON.stringify(json, null, 2);
+        elements.jsonOutput.value = jsonStr;
+        elements.jsonOutput.style.display = 'block';
+        elements.jsonTree.style.display = 'block';
+        elements.javaOutput.style.display = 'none';
+        updateTreeView(json);
+    } catch (error) {
+        alert('Failed to parse Java DTO: ' + error.message);
+    }
+}
+
+function generateJavaDto(data, className) {
+    const imports = new Set();
+    const classes = [];
+
+    buildJavaClass(data, className, imports, classes, '');
+
+    let result = '';
+    if (imports.size > 0) {
+        const sortedImports = [...imports].sort();
+        sortedImports.forEach(imp => result += imp + ';\n');
+        result += '\n';
+    }
+    result += classes.join('\n\n');
+    return result;
+}
+
+function resolveJavaType(value, parentClassName, imports, classes, indent) {
+    if (value === null || value === undefined) {
+        return 'Object';
+    }
+
+    const type = typeof value;
+
+    if (type === 'string') {
+        return 'String';
+    } else if (type === 'number') {
+        if (Number.isInteger(value)) {
+            return Math.abs(value) <= 2147483647 ? 'Integer' : 'Long';
+        }
+        return 'Double';
+    } else if (type === 'boolean') {
+        return 'Boolean';
+    } else if (Array.isArray(value)) {
+        if (value.length > 0) {
+            const elemType = resolveJavaType(value[0], parentClassName, imports, classes, indent);
+            return 'java.util.List<' + elemType + '>';
+        }
+        return 'java.util.List<Object>';
+    } else if (type === 'object') {
+        const nestedName = parentClassName + 'Inner';
+        buildJavaClass(value, nestedName, imports, classes, indent);
+        return nestedName;
+    }
+
+    return 'Object';
+}
+
+function buildJavaClass(data, className, imports, classes, indent) {
+    imports.add('import lombok.Data');
+    imports.add('import lombok.NoArgsConstructor');
+    imports.add('import lombok.AllArgsConstructor');
+    imports.add('import lombok.Builder');
+
+    const entries = Object.entries(data);
+    const fields = [];
+
+    for (const [key, value] of entries) {
+        const fieldName = toCamelCase(key);
+        const fieldType = resolveJavaType(value, className + '_' + capitalize(fieldName), imports, classes, indent);
+        if (fieldType.startsWith('java.util.')) {
+            imports.add('import ' + fieldType + ';');
+        }
+        fields.push({ name: fieldName, type: fieldType.replace('java.util.', '') });
+    }
+
+    let code = '@Data\n';
+    code += '@NoArgsConstructor\n';
+    code += '@AllArgsConstructor\n';
+    code += '@Builder\n';
+    code += 'public class ' + className + ' {\n';
+
+    for (const field of fields) {
+        code += '    private ' + field.type + ' ' + field.name + ';\n';
+    }
+
+    code += '}';
+    classes.push(code);
+}
+
+function parseJavaDto(code) {
+    code = code.replace(/\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '');
+
+    const annotationRegex = /@\w+(?:\([^)]*\))?/g;
+    code = code.replace(annotationRegex, '');
+
+    const classMatch = code.match(/class\s+(\w+)/);
+    if (!classMatch) throw new Error('Cannot find class name');
+
+    const className = classMatch[1];
+
+    const bodyMatch = code.match(/\{([\s\S]*)\}/);
+    if (!bodyMatch) throw new Error('Cannot find class body');
+
+    const body = bodyMatch[1];
+
+    const fields = [];
+    const fieldRegex = /private\s+(?:static\s+)?(?:final\s+)?(\w+(?:<[^>]+>)?)\s+(\w+)\s*;/g;
+    let match;
+    while ((match = fieldRegex.exec(body)) !== null) {
+        fields.push({ type: match[1], name: match[2] });
+    }
+
+    return { className, fields };
+}
+
+function generateSampleJson(parsed) {
+    const result = {};
+    for (const field of parsed.fields) {
+        result[field.name] = randomValueForType(field.type);
+    }
+    return result;
+}
+
+function randomValueForType(type) {
+    type = type.trim();
+
+    if (type === 'String' || type === 'java.lang.String') {
+        const samples = ['example', 'hello', 'test_value', 'sample_text', 'lorem', 'ipsum'];
+        return samples[Math.floor(Math.random() * samples.length)];
+    } else if (type === 'Integer' || type === 'int' || type === 'java.lang.Integer') {
+        return Math.floor(Math.random() * 1000);
+    } else if (type === 'Long' || type === 'long' || type === 'java.lang.Long') {
+        return Math.floor(Math.random() * 100000) + 1000000000;
+    } else if (type === 'Double' || type === 'double' || type === 'java.lang.Double') {
+        return Math.round(Math.random() * 10000) / 100;
+    } else if (type === 'Float' || type === 'float' || type === 'java.lang.Float') {
+        return parseFloat((Math.random() * 100).toFixed(2));
+    } else if (type === 'Boolean' || type === 'boolean' || type === 'java.lang.Boolean') {
+        return Math.random() > 0.5;
+    } else if (type === 'BigDecimal' || type === 'java.math.BigDecimal') {
+        return (Math.random() * 10000).toFixed(2);
+    } else if (type.startsWith('List<') || type.startsWith('java.util.List<')) {
+        const innerType = type.match(/List<(.+)>/);
+        if (innerType) {
+            const count = Math.floor(Math.random() * 3) + 1;
+            const arr = [];
+            for (let i = 0; i < count; i++) {
+                arr.push(randomValueForType(innerType[1]));
+            }
+            return arr;
+        }
+        return [];
+    } else if (type.startsWith('Map<') || type.startsWith('java.util.Map<')) {
+        const mapMatch = type.match(/Map<(.+),\s*(.+)>/);
+        if (mapMatch) {
+            const obj = {};
+            const key = randomValueForType(mapMatch[1]);
+            obj[key] = randomValueForType(mapMatch[2]);
+            return obj;
+        }
+        return {};
+    } else if (type === 'Date' || type === 'java.util.Date') {
+        return '2025-01-01 00:00:00';
+    } else if (type === 'LocalDateTime' || type === 'java.time.LocalDateTime') {
+        return '2025-01-01T00:00:00';
+    } else if (type === 'LocalDate' || type === 'java.time.LocalDate') {
+        return '2025-01-01';
+    } else if (type === 'LocalTime' || type === 'java.time.LocalTime') {
+        return '00:00:00';
+    } else if (type === 'Instant' || type === 'java.time.Instant') {
+        return '2025-01-01T00:00:00Z';
+    } else if (type === 'byte[]') {
+        return 'Ynl0ZQ==';
+    } else if (type === 'Object' || type === 'java.lang.Object') {
+        return 'value';
+    }
+    return 'value';
+}
+
+function toCamelCase(str) {
+    return str.replace(/[_-]([a-zA-Z0-9])/g, (_, c) => c.toUpperCase())
+        .replace(/^[A-Z]/, c => c.toLowerCase());
+}
+
+function capitalize(str) {
+    return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
 // Save request to favorites

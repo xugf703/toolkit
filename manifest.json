@@ -1,12 +1,13 @@
 {
   "manifest_version": 3,
   "name": "ToolKit",
-  "version": "1.4.0",
-  "description": "A comprehensive developer toolset for Chrome, featuring HTTP client with curl support, JSON beautifier/tree view, Base64/URL/Unicode encoder/decoder, time converter with timezone support, MD5 hashing, and Text diff",
+  "version": "1.5.0",
+  "description": "A comprehensive developer toolset for Chrome, featuring HTTP client with file download support, JSON beautifier/tree view/Java DTO converter, Base64/URL/Unicode encoder/decoder, time converter with timezone support, MD5 hashing, and Text diff",
   "permissions": [
     "activeTab",
     "storage",
-    "scripting"
+    "scripting",
+    "downloads"
   ],
   "host_permissions": [
     "<all_urls>"

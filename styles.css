@@ -112,7 +112,9 @@ body {
 #beautify-json,
 #minify-json,
 #toggle-tree,
-#copy-json {
+#copy-json,
+#json-to-java,
+#java-to-json {
     flex: 1;
     min-width: 80px;
     padding: 8px 12px;
@@ -127,8 +129,33 @@ body {
 #beautify-json:hover,
 #minify-json:hover,
 #toggle-tree:hover,
-#copy-json:hover {
+#copy-json:hover,
+#json-to-java:hover,
+#java-to-json:hover {
     background-color: #45a049;
+}
+
+#json-to-java,
+#java-to-json {
+    background-color: #4CAF50;
+}
+
+#json-to-java:hover,
+#java-to-json:hover {
+    background-color: #4CAF50;
+}
+
+#java-output {
+    width: 100%;
+    min-height: 200px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 14px;
+    resize: vertical;
+    background-color: #f9f9f9;
+    margin-top: 10px;
 }
 
 /* JSON Output Container */
